@@ -25,9 +25,28 @@ def create_table():
 
 def insert_data(data):
     con = get_database_connection()
-    cur = con.cursor()
-    cur.execute(create_table())
-    for i in data:
-        cur.execute("INSERT INTO timetable (teacher, subject, type, room, subgroup, day, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", (data[i]["teacher"], data[i]["subject"], data[i]["type"], data[i]["room"], data[i]["subgroup"], data[i]["day"], data[i]["start_time"], data[i]["end_time"]))
-    con.commit()
-    con.close()
+    create_table_query = create_table()
+
+    with con:
+        cur = con.cursor()
+        cur.execute(create_table_query)
+
+        insert_query = """
+        INSERT INTO timetable (teacher, subject, type, room, subgroup, day, start_time, end_time)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """
+
+        values = [
+            (
+                entry["teacher"],
+                entry["subject"],
+                entry["type"],
+                entry["room"],
+                entry["subgroup"],
+                entry["day"],
+                entry["start_time"],
+                entry["end_time"],
+            )
+            for entry in data.values()
+        ]
+        cur.executemany(insert_query, values)
